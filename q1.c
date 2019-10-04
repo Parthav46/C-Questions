@@ -23,3 +23,80 @@ of K squares can be picked with equal probability.
 
 Write a program that can solve Magnus's test cases within seconds.
 */
+
+
+#include <stdio.h>
+
+int ROW_OFFSET[] = {-1, -1, 0, 1, 1, 1, 0, -1};
+int COL_OFFSET[] = {0, 1, 1, 1, 0, -1, -1, -1};
+
+// Function to fill up queen space and its attack area
+void fillBoard(int N, int row, int col, int* board, int dir){
+  if(dir == 8){
+    *(board + col + (row*N)) = 2;
+    for(int i=0;i<8;i++){
+      fillBoard(N, row+ROW_OFFSET[i], col+COL_OFFSET[i], board, i);
+    }
+  } else {
+    if(*(board + col + (row*N)) != -1 && row >= 0 && row < N && col >= 0 && col < N)
+    {
+      *(board + col + (row*N)) = 1;
+      fillBoard(N, row+ROW_OFFSET[dir], col+COL_OFFSET[dir], board, dir);
+    }
+  }
+}
+
+// recursive function to set queens
+short fillQueen(int N, int col, int* board){
+  int answer[N][N];
+
+  if(col == N-1) {
+    for(int i=0; i<N; i++) {
+      if(*(board + col + (i*N)) == 0) {
+        *(board + col + (i*N)) = 2;
+        return 1;
+      }
+    }
+    return 0;
+  }
+  for(int i=0; i<N; i++){
+    if(*(board + col + (i*N)) == 0){
+      for(int j=0;j<N*N; j++) *(&answer[0][0] + j) = *(board + j); //Make a copy for each iteration
+      fillBoard(N, i, col, &answer[0][0], 8);
+      if(fillQueen(N, col+1, &answer[0][0])){
+        for(int j=0;j<N*N; j++) *(board + j) = *(&answer[0][0] + j); //Copy back upon true;
+        return 1;
+      }
+    }
+  }
+  return 0;
+}
+
+
+int main(){
+  int t;
+  scanf("%d", &t);
+  while(t--){
+    int N,K;
+    scanf("%d %d",&N, &K);
+    int board[N][N];
+    for(int i=0;i<N*N;i++) *(&board[0][0] + i) = 0;
+    for(int i=0;i<K;i++){
+      int tmp1, tmp2;
+      scanf("%d %d", &tmp1, &tmp2);
+      board[tmp1-1][tmp2-1] = -1;
+    }
+
+    fillQueen(N, 0, &board[0][0]);
+
+    int queens[N];
+    for(int i=0; i<N;i++){
+      for(int j=0;j<N;j++){
+        if(board[j][i] == 2) queens[i] = j+1;
+      }
+    }
+
+    for(int i=0;i<N;i++) printf("%d ",queens[i]);
+  }
+  return 0;
+}
